@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 2rem; }
+        
+        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; }
+        
+        header { background: #4f46e5; color: white; padding: 2rem; text-align: center; }
+        h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        
+        .add-task { padding: 2rem; border-bottom: 1px solid #eee; display: flex; gap: 1rem; flex-wrap: wrap; }
+        input[type="text"] { flex: 1; padding: 1rem; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 1.1rem; min-width: 250px; }
+        button { padding: 1rem 2rem; background: #10b981; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; transition: all 0.3s; }
+        button:hover { background: #059669; transform: translateY(-2px); }
+        
+        .tasks { padding: 2rem; max-height: 500px; overflow-y: auto; }
+        .task { display: flex; align-items: center; padding: 1.5rem; background: #f9fafb; margin-bottom: 1rem; border-radius: 12px; transition: all 0.3s; }
+        .task.completed { opacity: 0.7; background: #d1fae5; transform: translateX(10px); }
+        .task-text { flex: 1; font-size: 1.1rem; }
+        .delete { background: #ef4444; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.9rem; }
+        .delete:hover { background: #dc2626; }
+        
+        @media (max-width: 600px) { .add-task { flex-direction: column; } input[type="text"] { min-width: auto; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 Task Dashboard</h1>
+            <p id="task-count">0 tasks remaining</p>
+        </header>
+        
+        <section class="add-task">
+            <input type="text" id="taskInput" placeholder="Add a new task..." maxlength="50">
+            <button onclick="addTask()">Add Task</button>
+        </section>
+        
+        <section class="tasks" id="tasksList">
+            <!-- Tasks will appear here -->
+        </section>
+    </div>
+
+    <script>
+        const taskInput = document.getElementById('taskInput');
+        const tasksList = document.getElementById('tasksList');
+        const taskCount = document.getElementById('task-count');
+        
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        renderTasks();
+        
+        function addTask() {
+            const text = taskInput.value.trim();
+            if (text) {
+                tasks.push({ text, completed: false });
+                taskInput.value = '';
+                saveAndRender();
+            }
+        }
+        
+        function toggleTask(index) {
+            tasks[index].completed = !tasks[index].completed;
+            saveAndRender();
+        }
+        
+        function deleteTask(index) {
+            tasks.splice(index, 1);
+            saveAndRender();
+        }
+        
+        function renderTasks() {
+            tasksList.innerHTML = tasks.map((task, index) => `
+                <div class="task ${task.completed ? 'completed' : ''}" onclick="toggleTask(${index})">
+                    <span class="task-text">${task.text}</span>
+                    <button class="delete" onclick="event.stopPropagation(); deleteTask(${index})">Delete</button>
+                </div>
+            `).join('');
+            updateCount();
+        }
+        
+        function saveAndRender() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            renderTasks();
+        }
+        
+        function updateCount() {
+            const remaining = tasks.filter(t => !t.completed).length;
+            taskCount.textContent = `${remaining} tasks remaining`;
+        }
+        
+        // Enter key support
+        taskInput.addEventListener('keypress', e => e.key === 'Enter' && addTask());
+    </script>
+</body>
+</html>
